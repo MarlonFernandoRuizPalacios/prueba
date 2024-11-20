@@ -1,0 +1,24 @@
+FROM node:20
+
+RUN apt-get update && apt-get install -y wget nano postgresql postgresql-contrib && rm -rf /var/lib/apt/lists/*
+
+RUN npm cache clean --force
+
+RUN npm install -g npm@8.12.1
+
+RUN mkdir -p /pro/APIproductos
+
+WORKDIR /pro/APIproductos
+COPY productos/package*.json ./
+RUN npm install prisma
+RUN npm install @prisma/client
+RUN npm install pg 
+RUN npm install cors
+RUN npm install express
+RUN npm install nodemon
+RUN npm install dotenv
+COPY productos/ ./
+
+RUN npx prisma generate
+
+CMD ["npx", "nodemon", "app.js"]

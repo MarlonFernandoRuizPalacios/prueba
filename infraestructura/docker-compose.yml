@@ -1,0 +1,202 @@
+version: '3.8'
+
+services:
+  api_usuarios:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.usuarios
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 2GB
+        reservations:
+          cpus: '0.1'
+          memory: 1GB
+    ports:
+      - "3100:3100" 
+    volumes:
+      - ./APIS/usuarios:/usr/APIusuarios
+    networks:
+      - dev_network
+    environment:
+      DATABASE_URL: postgres://postgres:12345@usuarios_db:5432/usuarios_db?schema=public
+
+  usuarios_db:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.postgres
+    container_name: usuarios_db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: usuarios_db
+    ports:
+      - "5100:5432"
+    volumes:
+      - ./datos/usuarios_data:/var/lib/postgresql/data
+      - ./registros/usuarios_logs:/var/log/postgresql
+      - ./APIS/configuracion.postgresql/postgresql.conf:/etc/postgresql/postgresql.conf 
+    networks:
+      - dev_network
+
+  api_juegos:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.juegos
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 2GB
+        reservations:
+          cpus: '0.1'
+          memory: 1GB
+    ports:
+      - "3200:3200"  
+    volumes:
+      - ./APIS/juegos:/ord/APIjuegos
+    networks:
+      - dev_network
+    environment:
+      DATABASE_URL: postgres://postgres:12345@juegos_db:5432/juegos_db?schema=public
+
+  juegos_db:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.postgres
+    container_name: juegos_db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: juegos_db
+    ports:
+      - "5200:5432"
+    volumes:
+      - ./datos/juegos_data:/var/lib/postgresql/data
+      - ./registros/juegos_logs:/var/log/postgresql
+      - ./APIS/configuracion.postgresql/postgresql.conf:/etc/postgresql/postgresql.conf 
+    networks:
+      - dev_network
+
+  api_productos:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.productos
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 2GB
+        reservations:
+          cpus: '0.1'
+          memory: 1GB
+    ports:
+      - "3300:3300"
+    volumes:
+      - ./APIS/productos:/pro/APIproductos
+    networks:
+      - dev_network
+    environment:
+      DATABASE_URL: postgres://postgres:12345@productos_db:5432/productos_db?schema=public 
+
+  productos_db:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.postgres
+    container_name: productos_db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: productos_db
+    ports:
+      - "5300:5432"
+    volumes:
+      - ./datos/productos_data:/var/lib/postgresql/data
+      - ./registros/productos_logs:/var/log/postgresql
+      - ./APIS/configuracion.postgresql/postgresql.conf:/etc/postgresql/postgresql.conf 
+    networks:
+      - dev_network
+
+  api_compras:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.compras
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 2GB
+        reservations:
+          cpus: '0.1'
+          memory: 1GB
+    ports:
+      - "3400:3400"
+    volumes:
+      - ./APIS/compras:/pro/APIcompras
+    networks:
+      - dev_network
+    environment:
+      DATABASE_URL: postgres://postgres:12345@compras_db:5432/compras_db?schema=public 
+
+  compras_db:
+    build:
+      context: ./APIS
+      dockerfile: Dockerfile.postgres
+    container_name: compras_db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: compras_db
+    ports:
+      - "5400:5432"
+    volumes:
+      - ./datos/compras_data:/var/lib/postgresql/data
+      - ./registros/compras_logs:/var/log/postgresql
+      - ./APIS/configuracion.postgresql/postgresql.conf:/etc/postgresql/postgresql.conf 
+    networks:
+      - dev_network
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./registros/nginx/logs:/var/log/nginx 
+    depends_on:
+      - api_usuarios
+      - api_juegos
+      - api_productos
+      - api_compras
+    networks:
+      - dev_network
+
+  frontend:
+    build:
+      context: ./frontend 
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:80"  
+    networks:
+      - dev_network
+    depends_on:
+      - nginx
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: dev_pgadmin
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: carlos@alegria.com
+      PGADMIN_DEFAULT_PASSWORD: 12345
+    volumes:
+      - ./datos/pgadmin.data:/var/lib/pgadmin
+    networks:
+      - dev_network
+
+networks:
+  dev_network:
+    driver: bridge

@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model Juego {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  tipo        String
+  apuestaMin  Float
+  apuestaMax  Float
+  tasaPago    Float // Tasa para calcular los pagos en caso de ganar
+  apuestas    Apuesta[] // Relación con las apuestas realizadas en este juego
+}
+
+model Apuesta {
+  id        Int     @id @default(autoincrement())
+  juegoId   Int
+  monto     Float
+  resultado Boolean
+  pago      Float
+
+  // Relación con el juego
+  juego     Juego   @relation(fields: [juegoId], references: [id])
+  
+  // Fecha de creación para registrar cuándo se hizo la apuesta
+  createdAt DateTime @default(now())
+}
